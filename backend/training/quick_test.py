@@ -13,7 +13,6 @@ if BACKEND_DIR not in sys.path:
 
 from data.data_processing import get_processed_stock_data
 from models.rnn_model import StockPredictor
-import argparse
 
 
 def find_processed_csv(ticker: str) -> str:
@@ -28,21 +27,7 @@ def find_processed_csv(ticker: str) -> str:
     return ''
 
 
-def main(
-    ticker: str = 'AAPL',
-    epochs: int = 3,
-    hidden_size: int = 64,
-    num_layers: int = 1,
-    dropout: float = 0.5,
-    weight_decay: float = 1e-4,
-    rnn_type: str = 'LSTM',
-    use_attention: bool = True,
-    seq_len: int = 60,
-    batch_size: int = 32,
-    patience: int = 7,
-    lr: float = 1e-3,
-    test_split_date: str = '2025-01-01',
-):
+def main(ticker: str = 'AAPL'):
     print(f"=== Quick test for {ticker} ===")
 
     # Ensure processed data exists
@@ -56,28 +41,28 @@ def main(
 
     # Initialize a lightweight model
     predictor = StockPredictor(
-        sequence_length=seq_len,
-        hidden_size=hidden_size,
-        num_layers=num_layers,
-        dropout=dropout,
-        rnn_type=rnn_type,
-        learning_rate=lr,
-        weight_decay=weight_decay,
-        use_attention=use_attention,
+        sequence_length=60,
+        hidden_size=32,
+        num_layers=1,
+        dropout=0.2,
+        rnn_type='LSTM',
+        learning_rate=1e-3,
+        weight_decay=1e-5,
+        use_attention=True,
     )
 
     print("2) Preparing data...")
     input_size = predictor.prepare_data(
         data_path=data_path,
         target_column='Close',
-        test_split_date=test_split_date
+        test_split_date='2025-01-01'
     )
 
     print("3) Building model...")
     predictor.build_model(input_size)
 
     print("4) Training (few epochs)...")
-    predictor.train(epochs=epochs, batch_size=batch_size, patience=patience, gradient_clip=1.0)
+    predictor.train(epochs=3, batch_size=32, patience=2, gradient_clip=1.0)
 
     print("5) Evaluating...")
     train_metrics, test_metrics = predictor.evaluate()
@@ -97,33 +82,4 @@ def main(
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Quick test stock prediction model without server')
-    parser.add_argument('--ticker', type=str, default='AAPL', help='Stock ticker symbol')
-    parser.add_argument('--epochs', type=int, default=3, help='Number of training epochs')
-    parser.add_argument('--hidden_size', type=int, default=64)
-    parser.add_argument('--num_layers', type=int, default=1)
-    parser.add_argument('--dropout', type=float, default=0.5)
-    parser.add_argument('--weight_decay', type=float, default=1e-4)
-    parser.add_argument('--rnn_type', type=str, default='LSTM', choices=['LSTM','GRU'])
-    parser.add_argument('--no_attention', action='store_true', help='Disable attention mechanism')
-    parser.add_argument('--seq_len', type=int, default=60)
-    parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--patience', type=int, default=7)
-    parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--test_split_date', type=str, default='2025-01-01')
-    args = parser.parse_args()
-    main(
-        ticker=args.ticker.upper(),
-        epochs=args.epochs,
-        hidden_size=args.hidden_size,
-        num_layers=args.num_layers,
-        dropout=args.dropout,
-        weight_decay=args.weight_decay,
-        rnn_type=args.rnn_type,
-        use_attention=not args.no_attention,
-        seq_len=args.seq_len,
-        batch_size=args.batch_size,
-        patience=args.patience,
-        lr=args.lr,
-        test_split_date=args.test_split_date,
-    )
+    main()
