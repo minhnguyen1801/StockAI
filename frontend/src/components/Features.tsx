@@ -99,7 +99,7 @@ export function Features() {
               viewport={{ once: true }}
             >
               <Card className="h-full group hover:shadow-xl transition-all duration-300 border-2 hover:border-transparent hover:bg-gradient-to-br hover:from-background hover:to-muted">
-                <CardHeader className="space-y-4">
+                <CardHeader className="space-y-4 pb-6">
                   <div className={`inline-flex p-3 rounded-xl bg-gradient-to-r ${feature.color} w-fit`}>
                     <feature.icon className="h-6 w-6 text-white" />
                   </div>

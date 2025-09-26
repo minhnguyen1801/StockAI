@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import { ModeToggle } from "./ModeToggle";
 import { Brain, TrendingUp } from "lucide-react";
+import React from "react";
 
 export function Header() {
   const scrollToSection = (sectionId: string) => {
@@ -19,8 +20,8 @@ export function Header() {
   };
 
   return (
-    <header style={{ marginLeft: '175px' }} className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+    <header style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center justify-center">
         <div className="mr-4 flex">
           <a 
             className="mr-6 flex items-center space-x-2 cursor-pointer" 
