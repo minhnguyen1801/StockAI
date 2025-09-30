@@ -1,3 +1,4 @@
+import React from "react";
 import { Brain, Github, Twitter, Linkedin, Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";

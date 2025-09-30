@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "./ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { motion } from "motion/react";
@@ -24,7 +25,7 @@ export function Hero() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="inline-flex items-center rounded-full border px-3 py-1 text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white border-transparent"
               >
-                🚀 Next-Generation AI Technology
+                Next-Generation AI Technology
               </motion.div>
               
               <h1 className="text-4xl sm:text-5xl lg:text-6xl tracking-tight">

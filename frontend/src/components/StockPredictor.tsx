@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -6,8 +6,17 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, TrendingDown, Brain, Loader2, Target } from "lucide-react";
+import { TrendingUp, TrendingDown, Brain, Loader2, Target, Check, Search } from "lucide-react";
 import { motion } from "motion/react";
+
+// Popular stock tickers for autocomplete
+const POPULAR_TICKERS = [
+  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "BRK.B", "UNH", "XOM",
+  "JNJ", "JPM", "V", "PG", "HD", "CVX", "MA", "BAC", "ABBV", "PFE",
+  "KO", "AVGO", "PEP", "TMO", "COST", "DHR", "VZ", "ADBE", "ACN", "NFLX",
+  "CRM", "TXN", "QCOM", "NKE", "RTX", "AMD", "INTC", "IBM", "DIS", "WMT",
+  "GE", "CAT", "BA", "MMM", "AXP", "GS", "JPM", "MCD", "NEE", "PM"
+];
 
 export function StockPredictor() {
   const [ticker, setTicker] = useState("");
@@ -15,6 +24,77 @@ export function StockPredictor() {
   const [model, setModel] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [prediction, setPrediction] = useState<any>(null);
+  
+  // Autocomplete states
+  const [tickerSuggestions, setTickerSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const tickerInputRef = useRef<HTMLInputElement>(null);
+
+  // Autocomplete functions
+  const handleTickerChange = (value: string) => {
+    const upperValue = value.toUpperCase();
+    setTicker(upperValue);
+    
+    if (upperValue.length >= 1) {
+      const suggestions = POPULAR_TICKERS.filter(t =>
+        t.startsWith(upperValue)
+      ).slice(0, 8); // Show max 8 suggestions
+      
+      setTickerSuggestions(suggestions);
+      setShowSuggestions(suggestions.length > 0);
+      setSelectedSuggestionIndex(-1);
+    } else {
+      setShowSuggestions(false);
+      setTickerSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setTicker(suggestion);
+    setShowSuggestions(false);
+    setTickerSuggestions([]);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev < tickerSuggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          handleSuggestionClick(tickerSuggestions[selectedSuggestionIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+    }
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tickerInputRef.current && !tickerInputRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Mock prediction data
   const generateMockPrediction = () => {
@@ -56,6 +136,14 @@ export function StockPredictor() {
   const handlePredict = async () => {
     if (!ticker || !horizon || !model) return;
     
+    // Display user input in console for debugging
+    console.log('User Input:', {
+      ticker: ticker.toUpperCase(),
+      horizon: parseInt(horizon),
+      model: model,
+      timestamp: new Date().toISOString()
+    });
+    
     setIsLoading(true);
     
     try {
@@ -73,11 +161,44 @@ export function StockPredictor() {
       });
 
       if (!response.ok) {
-        throw new Error('Prediction failed');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Prediction failed');
       }
 
       const result = await response.json();
-      setPrediction(result);
+      
+      // Add safety checks
+      if (!result || !result.ticker) {
+        throw new Error('Invalid response from server');
+      }
+      
+      // Transform API response to match frontend format
+      const transformedResult = {
+        ticker: result.ticker,
+        currentPrice: result.current_price.toString(),
+        predictedPrice: result.predicted_price.toString(),
+        change: result.change.toString(),
+        changePercent: result.change_percent.toString(),
+        confidence: result.confidence.toString(),
+        model: result.model_type,  // Fixed: use model_type instead of model_used
+        horizon: result.horizon.toString(),
+        data: [
+          ...(result.historical_data || []).map((item: any) => ({
+            day: item.day,
+            price: item.price,
+            is_current: item.is_current || false,  // Add current day flag
+            date: item.date  // Add actual date
+          })),
+          ...(result.prediction_data || []).map((item: any) => ({
+            day: item.day,
+            price: item.price,
+            predicted: true,
+            date: item.date  // Add future date
+          }))
+        ]
+      };
+      
+      setPrediction(transformedResult);
     } catch (error) {
       console.error('Error making prediction:', error);
       // Fallback to mock data if backend is not available
@@ -137,73 +258,127 @@ export function StockPredictor() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <form onSubmit={(e) => { 
+                  e.preventDefault(); 
+                  console.log('Form submitted with data:', { ticker, horizon, model });
+                  handlePredict(); 
+                }} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="ticker">Stock Ticker</Label>
-                  <Input
-                    id="ticker"
-                    placeholder="e.g., AAPL, TSLA, GOOGL"
-                    value={ticker}
-                    onChange={(e) => setTicker(e.target.value.toUpperCase())}
-                    className="uppercase"
-                  />
+                  <div className="relative" ref={tickerInputRef}>
+                    <Input
+                      id="ticker"
+                      name="ticker"
+                      placeholder="e.g., AAPL, TSLA, GOOGL"
+                      value={ticker}
+                      onChange={(e) => handleTickerChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      className="uppercase pr-8"
+                      required
+                      autoComplete="off"
+                    />
+                    
+                    
+                    {/* Autocomplete suggestions */}
+                    {showSuggestions && tickerSuggestions.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                        {tickerSuggestions.map((suggestion, index) => (
+                          <div
+                            key={suggestion}
+                            className={`px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-accent ${
+                              index === selectedSuggestionIndex ? 'bg-accent' : ''
+                            }`}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                          >
+                            <span className="font-mono text-sm">{suggestion}</span>
+                            {ticker === suggestion && (
+                              <Check className="h-4 w-4 text-green-500" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
-                    Enter the stock symbol you want to predict
+                    Start typing a stock symbol (e.g., AAP, TS, GOOG) for suggestions
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="horizon">Prediction Horizon (Days)</Label>
-                  <Select value={horizon} onValueChange={setHorizon}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select prediction timeframe" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 Day</SelectItem>
-                      <SelectItem value="3">3 Days</SelectItem>
-                      <SelectItem value="7">1 Week</SelectItem>
-                      <SelectItem value="14">2 Weeks</SelectItem>
-                      <SelectItem value="30">1 Month</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="horizon">Prediction Horizon (Days)</Label>
+                    <Select value={horizon} onValueChange={setHorizon} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select prediction timeframe" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-b">
+                          Type to search or select:
+                        </div>
+                        <SelectItem value="1">1 Day</SelectItem>
+                        <SelectItem value="3">3 Days</SelectItem>
+                        <SelectItem value="7">1 Week</SelectItem>
+                        <SelectItem value="14">2 Weeks</SelectItem>
+                        <SelectItem value="30">1 Month</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="model">AI Model</Label>
-                  <Select value={model} onValueChange={setModel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose neural network model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lstm">LSTM (Long Short-Term Memory)</SelectItem>
-                      <SelectItem value="gru">GRU (Gated Recurrent Unit)</SelectItem>
-                      <SelectItem value="ensemble">Ensemble (LSTM + GRU + Transformer)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {model && (
-                    <p className="text-sm text-muted-foreground">
-                      {modelDescriptions[model as keyof typeof modelDescriptions]}
-                    </p>
-                  )}
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="model">AI Model</Label>
+                    <Select value={model} onValueChange={setModel} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose neural network model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-b">
+                          Select AI model type:
+                        </div>
+                        <SelectItem value="lstm">
+                          <div className="flex flex-col">
+                            <span className="font-medium">LSTM</span>
+                            <span className="text-xs text-muted-foreground">Long Short-Term Memory</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="gru">
+                          <div className="flex flex-col">
+                            <span className="font-medium">GRU</span>
+                            <span className="text-xs text-muted-foreground">Gated Recurrent Unit</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="ensemble">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Ensemble</span>
+                            <span className="text-xs text-muted-foreground">LSTM + GRU + Transformer</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {model && (
+                      <p className="text-sm text-muted-foreground">
+                        {modelDescriptions[model as keyof typeof modelDescriptions]}
+                      </p>
+                    )}
+                  </div>
 
-                <Button
-                  onClick={handlePredict}
-                  disabled={!ticker || !horizon || !model || isLoading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  size="lg"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analyzing Market Data...
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="mr-2 h-4 w-4" />
-                      Generate Prediction
-                    </>
-                  )}
-                </Button>
+                  <Button
+                    type="submit"
+                    disabled={!ticker || !horizon || !model || isLoading}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    size="lg"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing Market Data...
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="mr-2 h-4 w-4" />
+                        Generate Prediction
+                      </>
+                    )}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </motion.div>
@@ -271,7 +446,19 @@ export function StockPredictor() {
                           <XAxis dataKey="day" />
                           <YAxis domain={['dataMin - 5', 'dataMax + 5']} />
                           <Tooltip 
-                            labelFormatter={(label) => `Day ${label}`}
+                            labelFormatter={(label, payload) => {
+                              if (payload && payload[0] && payload[0].payload) {
+                                const data = payload[0].payload;
+                                if (data.is_current) {
+                                  return `${data.date} (Current)`;
+                                } else if (data.predicted) {
+                                  return `${data.date} (Predicted)`;
+                                } else {
+                                  return data.date;
+                                }
+                              }
+                              return `Day ${label}`;
+                            }}
                             formatter={(value: any, name) => [
                               `$${parseFloat(value).toFixed(2)}`, 
                               name === 'price' ? 'Price' : 'Predicted'
@@ -284,8 +471,13 @@ export function StockPredictor() {
                             strokeWidth={2}
                             dot={(props) => {
                               if (props.payload && props.payload.predicted) {
+                                // Blue dot for predicted values
                                 return <circle {...props} fill="#3b82f6" r={3} />;
+                              } else if (props.payload && props.payload.is_current) {
+                                // Red dot for current day
+                                return <circle {...props} fill="#ef4444" r={4} stroke="#ffffff" strokeWidth={2} />;
                               }
+                              // Green dot for historical values
                               return <circle {...props} fill="#10b981" r={1} />;
                             }}
                             connectNulls={false}
