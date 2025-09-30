@@ -126,7 +126,7 @@ plt.tight_layout()
 plt.show()
 
 # Print some statistics to see the difference
-print(f"\n📊 Prediction Performance:")
+print(f"\nPrediction Performance:")
 print(f"Average Actual Price: ${test['Close'].mean():.2f}")
 print(f"Average Predicted Price: ${test['predictions'].mean():.2f}")
 print(f"Difference: ${abs(test['Close'].mean() - test['predictions'].mean()):.2f}")

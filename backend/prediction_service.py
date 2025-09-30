@@ -24,7 +24,7 @@ class StockPredictionService:
         Download fresh stock data for a given ticker - using your exact approach
         """
         try:
-            print(f"📊 Downloading data for {ticker}...")
+            print(f"Downloading data for {ticker}...")
             
             # Use your exact date range approach (5 years back)
             end_ts = pd.Timestamp.now()
@@ -61,14 +61,14 @@ class StockPredictionService:
             # Cache the data
             self.data_cache[ticker] = df
             
-            print(f"✅ Downloaded {len(df)} rows for {ticker}")
-            print(f"📅 Date range: {df['Date'].min().date()} → {df['Date'].max().date()}")
-            print(f"💰 Close range: ${df['Close'].min():.2f} → ${df['Close'].max():.2f}")
+            print(f"Downloaded {len(df)} rows for {ticker}")
+            print(f"Date range: {df['Date'].min().date()} -> {df['Date'].max().date()}")
+            print(f"Close range: ${df['Close'].min():.2f} -> ${df['Close'].max():.2f}")
             
             return df
             
         except Exception as e:
-            print(f"❌ Error downloading data for {ticker}: {e}")
+            print(f"Error downloading data for {ticker}: {e}")
             raise
     
     def train_model_exact(self, ticker):
@@ -76,7 +76,7 @@ class StockPredictionService:
         Train model using YOUR EXACT logic from main.py
         """
         try:
-            print(f"🤖 Training model for {ticker} using your exact logic...")
+            print(f"Training model for {ticker} using your exact logic...")
             
             # Download data if not cached
             if ticker not in self.data_cache:
@@ -139,7 +139,7 @@ class StockPredictionService:
             self.models[ticker] = model
             self.scalers[ticker] = scaler
             
-            print(f"✅ Model trained successfully for {ticker} using your exact logic")
+            print(f"Model trained successfully for {ticker} using your exact logic")
             
             return {
                 'model': model,
@@ -149,7 +149,7 @@ class StockPredictionService:
             }
             
         except Exception as e:
-            print(f"❌ Error training model for {ticker}: {e}")
+            print(f"Error training model for {ticker}: {e}")
             raise
     
     def predict_stock_price(self, ticker, horizon_days=1):
@@ -159,7 +159,7 @@ class StockPredictionService:
         try:
             # Check if model exists, if not train it
             if ticker not in self.models:
-                print(f"🔄 Model not found for {ticker}, training new model...")
+                print(f"Model not found for {ticker}, training new model...")
                 self.train_model_exact(ticker)
             
             model = self.models[ticker]
@@ -279,7 +279,7 @@ class StockPredictionService:
             }
             
         except Exception as e:
-            print(f"❌ Error making prediction for {ticker}: {e}")
+            print(f"Error making prediction for {ticker}: {e}")
             raise
 
 # Global instance

@@ -52,9 +52,9 @@ try:
 
     # --- Diagnostics ---
     print(df.info())
-    print(f"✅ Downloaded {len(df)} rows for {user}")
-    print(f"📅 Date range: {df['Date'].min().date()} → {df['Date'].max().date()}")
-    print(f"💰 Close range: ${df['Close'].min():.2f} → ${df['Close'].max():.2f}")
+    print(f"Downloaded {len(df)} rows for {user}")
+    print(f"Date range: {df['Date'].min().date()} -> {df['Date'].max().date()}")
+    print(f"Close range: ${df['Close'].min():.2f} -> ${df['Close'].max():.2f}")
 
     print("\nFirst 5 rows:")
     print(df.head())
@@ -65,10 +65,10 @@ try:
     # --- Save CSV ---
     out_csv = f"{user}_Stock_Data.csv"
     df.to_csv(out_csv, index=False)
-    print(f"\n💾 Saved to '{out_csv}'")
+    print(f"\nSaved to '{out_csv}'")
 
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f"Error: {e}")
     print("Please check ticker symbol, dates, and internet connectivity.")
     df = None
 

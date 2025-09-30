@@ -47,7 +47,7 @@ def predict_stock(request: PredictionRequest):
     Receive user input from frontend and process it with real AI predictions
     """
     print("=" * 50)
-    print("📊 RECEIVED USER DATA FROM FRONTEND:")
+    print("RECEIVED USER DATA FROM FRONTEND:")
     print(f"   Ticker: {request.ticker}")
     print(f"   Horizon: {request.horizon} days")
     print(f"   Model: {request.model}")
@@ -64,7 +64,7 @@ def predict_stock(request: PredictionRequest):
             horizon_days=request.horizon
         )
         
-        print(f"✅ Prediction completed:")
+        print(f"Prediction completed:")
         print(f"   Current Price: ${prediction_result['current_price']:.2f}")
         print(f"   Predicted Price: ${prediction_result['predicted_price']:.2f}")
         print(f"   Change: ${prediction_result['change']:.2f} ({prediction_result['change_percent']:.2f}%)")
@@ -74,12 +74,12 @@ def predict_stock(request: PredictionRequest):
         return PredictionResponse(**prediction_result)
         
     except Exception as e:
-        print(f"❌ Error in prediction: {e}")
-        print(f"❌ Traceback: {traceback.format_exc()}")
+        print(f"Error in prediction: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 if __name__ == "__main__":
-    print("🚀 Starting Stock Prediction API...")
-    print("📡 API will be available at: http://localhost:8000")
-    print("📚 API docs will be at: http://localhost:8000/docs")
+    print("Starting Stock Prediction API...")
+    print("API will be available at: http://localhost:8000")
+    print("API docs will be at: http://localhost:8000/docs")
     uvicorn.run(app, host="0.0.0.0", port=8000)

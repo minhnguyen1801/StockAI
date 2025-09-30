@@ -74,13 +74,13 @@ const AIChatbox: React.FC = () => {
         response = "Our model performance metrics: Average R² Score: 0.69, MAPE: 4.0%, Direction Accuracy: 54.2%. For AAPL: R² 0.73, MAPE 2.5%. For MSFT: R² 0.66, MAPE 5.5%. These results indicate strong predictive capability while maintaining realistic expectations for market volatility.";
         type = 'prediction';
       } else if (lowerMessage.includes('risk') || lowerMessage.includes('disclaimer')) {
-        response = "⚠️ Important: All predictions are for educational purposes only. Stock markets are inherently unpredictable and past performance doesn't guarantee future results. Always consult with financial advisors and never invest more than you can afford to lose. Our AI provides insights, not financial advice.";
+        response = "Important: All predictions are for educational purposes only. Stock markets are inherently unpredictable and past performance doesn't guarantee future results. Always consult with financial advisors and never invest more than you can afford to lose. Our AI provides insights, not financial advice.";
         type = 'error';
       } else if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
-        response = "I can help you with: 📈 Explaining stock predictions and model performance, 🧠 Describing our AI architecture and algorithms, 📊 Interpreting technical indicators and market data, ⚠️ Providing risk disclaimers and educational content, 🔍 Answering questions about market trends and patterns. Try asking about specific stocks, model accuracy, or technical analysis!";
+        response = "I can help you with: Explaining stock predictions and model performance, Describing our AI architecture and algorithms, Interpreting technical indicators and market data, Providing risk disclaimers and educational content, Answering questions about market trends and patterns. Try asking about specific stocks, model accuracy, or technical analysis!";
         type = 'general';
       } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-        response = "Hello! 👋 I'm here to help you understand stock market predictions and our AI system. Feel free to ask me about predictions, model performance, technical analysis, or any questions about the stock market!";
+        response = "Hello! I'm here to help you understand stock market predictions and our AI system. Feel free to ask me about predictions, model performance, technical analysis, or any questions about the stock market!";
         type = 'general';
       } else {
         const responses = [
@@ -349,8 +349,8 @@ const AIChatbox: React.FC = () => {
                                   variant="secondary" 
                                   className={`text-xs ${getMessageBadgeColor(message.type)}`}
                                 >
-                                  {message.type === 'prediction' ? '📈 Prediction' : 
-                                   message.type === 'error' ? '⚠️ Warning' : '💬 General'}
+                                  {message.type === 'prediction' ? 'Prediction' : 
+                                   message.type === 'error' ? 'Warning' : 'General'}
                                 </Badge>
                               )}
                               <div className="text-xs text-muted-foreground">
