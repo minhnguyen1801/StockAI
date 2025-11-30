@@ -163,6 +163,9 @@ npm run dev             # Starts Vite dev server at http://localhost:3000
 - **Frontend:** Modern React + Vite UI
 - **Backend:** FastAPI, scalable API design
 
+
+
+
 ---
 
 ## License
@@ -181,3 +184,9 @@ This project is for educational and research purposes. See individual files for 
 ## Feedback & Contributions
 
 Pull requests and issues are welcome! For questions, contact the project maintainer.
+
+
+
+https://github.com/user-attachments/assets/5a4a5b13-ef53-4c68-9d42-ffaea730098d
+
+
